@@ -98,12 +98,14 @@ Handles both stages of an interactive round:
 
 ---
 
+
 ## Simulate Mode Methods
 
 ### `_validate()`
 Checks inputs before running a simulation:
 - Switch dropdown must not be `"-- Select --"`.
 - N entry must be a positive integer.
+
 Sets `error_var` with a descriptive message on failure, clears it on success.
 
 ### `_on_run()`
@@ -137,31 +139,32 @@ Appends a line to the console `Text` widget. Temporarily sets the widget to `"no
 ---
 
 ## Application Flow
-startup
-└─ _build_ui()
-└─ _on_mode_change() → default: Simulate mode shown
 
-── SIMULATE MODE ──────────────────────────────────────────
-User sets switch dropdown + N entry → clicks "Run Simulation"
-└─ _on_run()
-├─ _validate()
-├─ stores _graph_n, resets bars + graph, redraws axes
-└─ Thread: _simulate()
-└─ every batch: self.after(0, _update_ui)
-├─ updates bars + labels
-├─ appends point → _redraw_graph()
-└─ on final batch: shows summary, re-enables button
+    startup
+      └─ _build_ui()
+           └─ _on_mode_change()  →  default: Simulate mode shown
 
-── PLAY MODE ──────────────────────────────────────────────
-User clicks a door → _on_door_click() [Stage 1]
-├─ PlayMonteHall() → captures shown_index, winning_door
-└─ reveals goat door, prompts final pick
+    ── SIMULATE MODE ──────────────────────────────────────────
+    User sets switch dropdown + N entry → clicks "Run Simulation"
+      └─ _on_run()
+           ├─ _validate()
+           ├─ stores _graph_n, resets bars + graph, redraws axes
+           └─ Thread: _simulate()
+                └─ every batch: self.after(0, _update_ui)
+                     ├─ updates bars + labels
+                     ├─ appends point → _redraw_graph()
+                     └─ on final batch: shows summary, re-enables button
 
-User clicks final door → _on_door_click() [Stage 2]
-├─ resolves won, switched
-├─ reveals all doors
-├─ _log() → console
-├─ shows Play Again button
-└─ self.after(0, _update_ui) → updates results panel
+    ── PLAY MODE ──────────────────────────────────────────────
+    User clicks a door  →  _on_door_click()  [Stage 1]
+      ├─ PlayMonteHall() → captures shown_index, winning_door
+      └─ reveals goat door, prompts final pick
 
-User clicks "🔄 Play Again" → _reset_play_stage()
+    User clicks final door  →  _on_door_click()  [Stage 2]
+      ├─ resolves won, switched
+      ├─ reveals all doors
+      ├─ _log() → console
+      ├─ shows Play Again button
+      └─ self.after(0, _update_ui) → updates results panel
+
+    User clicks "🔄 Play Again"  →  _reset_play_stage()
