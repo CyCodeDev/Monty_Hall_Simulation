@@ -24,16 +24,15 @@ def PlayMonteHall(door, switch):
     return won, shown_index, winning_door
 
 
-# ----------------------------------------------------------------------
-# Batch simulation
-# ----------------------------------------------------------------------
-def SimMonteHall(N, switch):
-    return [PlayMonteHall(random.randint(0, 2), switch)[0] for _ in range(N)]
+# Batch TRIALS
+
+# def SimMonteHall(N, switch):
+#    return [PlayMonteHall(random.randint(0, 2), switch)[0] for _ in range(N)]
 
 
-# ======================================================================
-# GUI
-# ======================================================================
+
+# START TKINTER GUI STUFF
+
 class SimApp(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -43,13 +42,12 @@ class SimApp(tk.Tk):
         self._revealed_door = None
         self._winning_door  = None
         self._graph_points  = []
-        self._graph_n       = 1     # total trials for current run — set in _on_run
+        self._graph_n       = 1     # POSSIBLY NOT NEEDED
         self._build_ui()
 
 
-    # ------------------------------------------------------------------
-    # UI Construction
-    # ------------------------------------------------------------------
+    # UI Construction ******************* RED ZONE CODE 
+
     def _build_ui(self):
 
         # ── Title ──────────────────────────────────────────────────────
@@ -57,7 +55,7 @@ class SimApp(tk.Tk):
             pady=(16, 4)
         )
 
-        # ── Body: left_frame | separator | right_frame ─────────────────
+        # Body contains left_frame, the separator, and right_frame
         body = tk.Frame(self)
         body.pack(fill="x", padx=0, pady=0)
         body.columnconfigure(0, minsize=340)
@@ -72,9 +70,8 @@ class SimApp(tk.Tk):
         right_frame = tk.Frame(body)
         right_frame.grid(row=0, column=2, sticky="nw", padx=(0, 16), pady=4)
 
-        # ══════════════════════════════════════════════════════════════
-        # LEFT FRAME
-        # ══════════════════════════════════════════════════════════════
+        # LEFT FRAME container:
+        # Mode, simulate moder, and play mode container in here
 
         tk.Label(left_frame, text="Mode:", font=("Helvetica", 11, "bold")).pack(
             anchor="w", pady=(4, 2)
@@ -93,7 +90,9 @@ class SimApp(tk.Tk):
 
         ttk.Separator(left_frame, orient="horizontal").pack(fill="x", pady=8)
 
-        # ── [SIMULATE] widgets ─────────────────────────────────────────
+        # ******************SIMULATE MODE******************frame configuration
+        # downstream dependencies are:
+        # Switch drop-down, trial numbers, and line graph
         self.sim_frame = tk.Frame(left_frame)
         self.sim_frame.pack(anchor="w")
 
@@ -108,7 +107,7 @@ class SimApp(tk.Tk):
 
         tk.Label(self.sim_frame, text="Number of simulations:",
                  font=("Helvetica", 11, "bold")).grid(row=1, column=0, sticky="w", pady=6)
-        self.n_var = tk.StringVar(value="1000")
+        self.n_var = tk.StringVar(value="10000")
         self.n_entry = tk.Entry(self.sim_frame, textvariable=self.n_var, width=10,
                                 font=("Helvetica", 10))
         self.n_entry.grid(row=1, column=1, sticky="w", padx=(10, 0), pady=6)
@@ -119,7 +118,7 @@ class SimApp(tk.Tk):
         )
         self.run_btn.grid(row=2, column=0, columnspan=2, pady=(10, 4))
 
-        # ── [PLAY] widgets ─────────────────────────────────────────────
+        # ************PLAY MODE FRAME************ instructions
         self.play_frame = tk.Frame(left_frame)
 
         tk.Label(self.play_frame, text="Pick your door:",
@@ -149,14 +148,14 @@ class SimApp(tk.Tk):
             command=self._reset_play_stage, bg="#1565c0", fg="white", padx=10
         )
 
-        # ── Error label ────────────────────────────────────────────────
+        # error stuff for when a user does not select a drop down switch selection or 
+        # does not enter number of trials to perform
         self.error_var = tk.StringVar()
         tk.Label(left_frame, textvariable=self.error_var,
                  fg="red", font=("Helvetica", 9)).pack(anchor="w")
 
-        # ══════════════════════════════════════════════════════════════
-        # RIGHT FRAME
-        # ══════════════════════════════════════════════════════════════
+
+        # ************RIGHT FRAME CONTAINER************ for Progress on trials/wins/losses
 
         tk.Label(right_frame, text="RESULTS",
                  font=("Helvetica", 12, "bold")).pack(anchor="w", pady=(4, 6))
@@ -183,9 +182,7 @@ class SimApp(tk.Tk):
                                     font=("Courier", 10), justify="left")
         self.stats_label.pack(anchor="w", pady=(6, 4))
 
-        # ══════════════════════════════════════════════════════════════
-        # GRAPH — full-width bottom section, Simulate mode only
-        # ══════════════════════════════════════════════════════════════
+        # ************LINE GRAPH FRAME************ Line graph frame formatting stuff
 
         self.graph_outer = tk.Frame(self)
 
@@ -210,10 +207,7 @@ class SimApp(tk.Tk):
         self.graph_canvas.pack(fill="x", expand=True)
         self.graph_canvas.bind("<Configure>", self._on_canvas_resize)
 
-        # ══════════════════════════════════════════════════════════════
-        # CONSOLE — full-width bottom row, Play mode only
-        # ══════════════════════════════════════════════════════════════
-
+        # ************CONSOLE************ Play mode console stuff
         self.console_outer = tk.Frame(self)
 
         ttk.Separator(self.console_outer, orient="horizontal").pack(
@@ -226,7 +220,8 @@ class SimApp(tk.Tk):
         console_inner.pack(fill="both", expand=True, padx=12, pady=(2, 12))
 
         self.console = tk.Text(
-            console_inner, height=6,
+            console_inner, height=30,
+            width=120,
             font=("Courier", 9), state="disabled",
             bg="#1e1e1e", fg="#d4d4d4",
             relief="flat", padx=6, pady=4, wrap="word"
@@ -243,9 +238,7 @@ class SimApp(tk.Tk):
         self._on_mode_change()
 
 
-    # ------------------------------------------------------------------
-    # Graph Helpers
-    # ------------------------------------------------------------------
+    # Line Graph Reusabe Helpers
     def _on_canvas_resize(self, event=None):
         self.graph_canvas.delete("all")
         self._draw_graph_axes()
@@ -261,14 +254,14 @@ class SimApp(tk.Tk):
         x0, y0 = pl,     pt
         x1, y1 = w - pr, h - pb
 
-        # Horizontal gridlines + y-axis labels
+        # Horizontal y-axis labels
         for pct in [0.0, 0.33, 0.50, 0.67, 1.0]:
             y = y1 - pct * (y1 - y0)
             c.create_line(x0, y, x1, y, fill="#333333", dash=(2, 4), tags="axes")
             c.create_text(x0 - 4, y, text=f"{int(pct*100)}%", anchor="e",
                           fill="#888888", font=("Courier", 7), tags="axes")
 
-        # X-axis tick labels: 0, n/4, n/2, 3n/4, n
+        # X-axis tick labels for quarter intervals -- currently doesn't show
         n = self._graph_n
         for frac, label in [(0, "0"), (0.25, f"{n//4}"), (0.5, f"{n//2}"),
                             (0.75, f"{3*n//4}"), (1.0, f"{n}")]:
@@ -277,7 +270,7 @@ class SimApp(tk.Tk):
             c.create_text(x, h - 5, text=label, anchor="n",
                           fill="#888888", font=("Courier", 7), tags="axes")
 
-        # Axes
+        # Axes for line graph
         c.create_line(x0, y0, x0, y1, fill="#666666", width=1, tags="axes")
         c.create_line(x0, y1, x1, y1, fill="#666666", width=1, tags="axes")
 
@@ -297,7 +290,7 @@ class SimApp(tk.Tk):
         x0, y0 = pl,     pt
         x1, y1 = w - pr, h - pb
 
-        # Scale x to the user's chosen N, not just the last data point
+        # Scale the x-axis per the number of trials
         n = self._graph_n
 
         def to_canvas(trial, rate):
@@ -323,9 +316,7 @@ class SimApp(tk.Tk):
         self.graph_canvas.delete("plot")
 
 
-    # ------------------------------------------------------------------
-    # Mode Toggle
-    # ------------------------------------------------------------------
+    # Mode Toggle - rsets all of the stats/results
     def _on_mode_change(self):
         self._reset_stats()
         if self.mode_var.get() == "simulate":
@@ -341,9 +332,7 @@ class SimApp(tk.Tk):
             self._reset_play_stage()
 
 
-    # ------------------------------------------------------------------
     # Stats Reset Helper
-    # ------------------------------------------------------------------
     def _reset_stats(self):
         self.progress_bar["value"] = 0
         self.win_bar["value"]      = 0
@@ -355,9 +344,8 @@ class SimApp(tk.Tk):
         self._reset_graph()
 
 
-    # ------------------------------------------------------------------
-    # Console Helper
-    # ------------------------------------------------------------------
+    # Console for reprinting messages
+
     def _log(self, message, tag):
         self.console.config(state="normal")
         self.console.insert("end", message + "\n", tag)
@@ -365,9 +353,8 @@ class SimApp(tk.Tk):
         self.console.config(state="disabled")
 
 
-    # ------------------------------------------------------------------
-    # Play Mode — Stage Management
-    # ------------------------------------------------------------------
+    # Play Mode — staging management of how to manage the doors
+
     def _reset_play_stage(self):
         self._play_door     = None
         self._revealed_door = None
@@ -386,7 +373,7 @@ class SimApp(tk.Tk):
 
     def _on_door_click(self, idx):
         if self._play_door is None:
-            # ── Stage 1 ────────────────────────────────────────────────
+            ### Stage 1 User clicks on the door to change the status
             self._play_door = idx
             self.play_door_btns[idx].config(relief="sunken", bg="#bbdefb")
 
@@ -404,7 +391,7 @@ class SimApp(tk.Tk):
             )
 
         else:
-            # ── Stage 2 ────────────────────────────────────────────────
+            #### Stage 2 for whn the user clicks on the second door choice
             if idx == self._revealed_door:
                 return
             switched = (idx != self._play_door)
@@ -485,9 +472,7 @@ class SimApp(tk.Tk):
                        self._play_door, switched)
 
 
-    # ------------------------------------------------------------------
     # Input Validation (Simulate mode only)
-    # ------------------------------------------------------------------
     def _validate(self):
         if self.switch_var.get() == "-- Select --":
             self.error_var.set("Please select a switch preference (Yes or No).")
@@ -498,10 +483,8 @@ class SimApp(tk.Tk):
         self.error_var.set("")
         return True
 
-
-    # ------------------------------------------------------------------
     # Run Handler (Simulate mode only)
-    # ------------------------------------------------------------------
+
     def _on_run(self):
         if not self._validate():
             return
@@ -528,15 +511,13 @@ class SimApp(tk.Tk):
         self.run_btn.config(state="disabled")
 
         thread = threading.Thread(
-            target=self._simulate, args=(will_switch, n), daemon=True
+            target=self.SimMonteHall, args=(will_switch, n), daemon=True
         )
         thread.start()
 
-
-    # ------------------------------------------------------------------
     # Simulation loop (background thread)
-    # ------------------------------------------------------------------
-    def _simulate(self, will_switch, n):
+
+    def SimMonteHall(self, will_switch, n):
         wins  = 0
         batch = max(1, n // 200)
 
@@ -549,9 +530,7 @@ class SimApp(tk.Tk):
                 self.after(0, self._update_ui, i, n, wins, losses, None, will_switch)
 
 
-    # ------------------------------------------------------------------
-    # UI Update (called on main thread via after())
-    # ------------------------------------------------------------------
+    # Updates UI (called on main thread via after())
     def _update_ui(self, runs_done, n, wins, losses, option_y, will_switch):
         win_rate  = wins   / runs_done * 100
         loss_rate = losses / runs_done * 100
