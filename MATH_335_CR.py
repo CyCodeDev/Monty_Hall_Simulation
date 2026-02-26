@@ -1,3 +1,6 @@
+# Repository available
+# https://github.com/CyCodeDev/Monty_Hall_Simulation
+# 
 import random
 import tkinter as tk
 from tkinter import ttk
